@@ -39,7 +39,7 @@ int
 main (int argc, char *argv[])
 {
   bool verbose = true;
-  uint32_t nCsma = 3;
+  uint32_t nCsma = 2;
 
   CommandLine cmd;
   cmd.AddValue ("nCsma", "Number of \"extra\" CSMA nodes/devices", nCsma);
@@ -55,13 +55,16 @@ main (int argc, char *argv[])
 
   nCsma = nCsma == 0 ? 1 : nCsma;
 
-  NodeContainer p2pNodes,p2pNodes1;
+  NodeContainer p2pNodes,p2pNodes1,p2pNodes2,p2pNodes3;
   p2pNodes.Create (2);
   p2pNodes1.Create (1);
-  
+  p2pNodes2.Create (2);
+  p2pNodes3.Create (1);
+   
 
   NodeContainer csmaNodes;
   csmaNodes.Add (p2pNodes.Get (1));
+  csmaNodes.Add (p2pNodes2.Get (0));
   csmaNodes.Create (nCsma);
 
   PointToPointHelper pointToPoint;
@@ -72,6 +75,14 @@ main (int argc, char *argv[])
   pointToPoint1.SetDeviceAttribute ("DataRate", StringValue ("5Mbps"));
   pointToPoint1.SetChannelAttribute ("Delay", StringValue ("2ms"));
 
+  PointToPointHelper pointToPoint2;
+  pointToPoint2.SetDeviceAttribute ("DataRate", StringValue ("5Mbps"));
+  pointToPoint2.SetChannelAttribute ("Delay", StringValue ("2ms"));
+  
+  PointToPointHelper pointToPoint3;
+  pointToPoint3.SetDeviceAttribute ("DataRate", StringValue ("5Mbps"));
+  pointToPoint3.SetChannelAttribute ("Delay", StringValue ("2ms"));
+
 
   NetDeviceContainer p2pDevices;
   p2pDevices = pointToPoint.Install (p2pNodes);
@@ -79,6 +90,14 @@ main (int argc, char *argv[])
   
   NetDeviceContainer p2pDevices1;
   p2pDevices1 = pointToPoint1.Install (p2pNodes.Get(0),p2pNodes1.Get(0));
+  
+  NetDeviceContainer p2pDevices2;
+  p2pDevices2 = pointToPoint.Install (p2pNodes2);
+  
+  
+  NetDeviceContainer p2pDevices3;
+  p2pDevices3 = pointToPoint1.Install (p2pNodes2.Get(0),p2pNodes3.Get(0));
+
 
   CsmaHelper csma;
   csma.SetChannelAttribute ("DataRate", StringValue ("100Mbps"));
@@ -90,6 +109,8 @@ main (int argc, char *argv[])
   InternetStackHelper stack;
   stack.Install (p2pNodes.Get (0));
   stack.Install (p2pNodes1.Get (0));
+  stack.Install (p2pNodes2.Get (1));
+  stack.Install (p2pNodes3.Get (0));  
   stack.Install (csmaNodes);
 
   Ipv4AddressHelper address;
@@ -98,10 +119,14 @@ main (int argc, char *argv[])
   p2pInterfaces = address.Assign (p2pDevices);
   p2pInterfaces1 = address.Assign (p2pDevices1);
 
-  address.SetBase ("10.1.2.0", "255.255.255.0");
+  address.SetBase ("20.1.2.0", "255.255.255.0");
   Ipv4InterfaceContainer csmaInterfaces;
   csmaInterfaces = address.Assign (csmaDevices);
 
+  address.SetBase ("30.1.3.0", "255.255.255.0");
+  Ipv4InterfaceContainer p2pInterfaces2,p2pInterfaces3;
+  p2pInterfaces2 = address.Assign (p2pDevices2);
+  p2pInterfaces3= address.Assign (p2pDevices3);
   UdpEchoServerHelper echoServer (9);
 
   ApplicationContainer serverApps = echoServer.Install (csmaNodes.Get (nCsma));
